@@ -15,8 +15,8 @@ const (
 
 type Clipboard struct {
 	gorm.Model
-	Datatype datatype
-	Data     []byte
+	Datatype  datatype   `gorm:"not null"`
+	Data      []byte     `gorm:"not null"`
 	CreatedAt time.Time
     UpdatedAt time.Time
 }
