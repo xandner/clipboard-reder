@@ -2,6 +2,7 @@ package repo
 
 import (
 	"clip/database"
+	"clip/logger"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,6 +10,7 @@ import (
 
 type clipboard struct {
 	db *gorm.DB
+	l  logger.Logger
 }
 
 type Clipboard interface {
@@ -18,9 +20,10 @@ type Clipboard interface {
 	LastStoredData() (error, database.Clipboard)
 }
 
-func NewClipboard(db *gorm.DB) Clipboard {
+func NewClipboard(db *gorm.DB,l logger.Logger) Clipboard {
 	return &clipboard{
 		db,
+		l,
 	}
 }
 

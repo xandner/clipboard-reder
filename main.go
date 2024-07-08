@@ -3,10 +3,10 @@ package main
 import (
 	"clip/database"
 	"clip/jobs"
+	"clip/logger"
 	"clip/pkg"
 	"clip/repo"
 	"clip/usecase"
-	"fmt"
 	"sync"
 	"time"
 
@@ -17,9 +17,15 @@ import (
 )
 
 func main() {
-	fmt.Println("start")
+
+	//init logger
+	logger, err := logger.NewLogger("log.log")
+	if err != nil {
+		panic("Error creating logger")
+	}
+	logger.Info("Logger initialized")
 	db, err := gorm.Open(sqlite.Open("clipboard.db"), &gorm.Config{})
-	fmt.Println("db initialized")
+	logger.Info("Database initialized")
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -29,23 +35,23 @@ func main() {
 	s.Every(12).Hour().Do(jobs.Init, db)
 	s.StartAsync()
 
-	run(db)
+	run(db, logger)
 }
 
-func run(db *gorm.DB) {
+func run(db *gorm.DB, logger logger.Logger) {
 
 	var wg sync.WaitGroup
 	// Migrate the schema
 	db.AutoMigrate(&database.Clipboard{})
 
 	// create repo object
-	newRepo := repo.NewClipboard(db)
+	newRepo := repo.NewClipboard(db, logger)
 
 	// create usecase object
-	newClipboard := usecase.NewClipboard(newRepo)
+	newClipboard := usecase.NewClipboard(newRepo, logger)
 
 	// Run the process
-	newPkg := pkg.NewProcess(newClipboard)
+	newPkg := pkg.NewProcess(newClipboard, logger)
 	newPkg.DeleteClipboardLastDayData()
 	wg.Add(1)
 	go newPkg.Init()
