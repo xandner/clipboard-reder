@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"clip/database"
+	"clip/logger"
 	"clip/usecase"
 	"fmt"
 	"time"
@@ -9,15 +10,17 @@ import (
 
 type process struct {
 	clipboard usecase.Clipboard
+	logger    logger.Logger
 }
 type Process interface {
 	Init()
 	DeleteClipboardLastDayData() error
 }
 
-func NewProcess(u usecase.Clipboard) Process {
+func NewProcess(u usecase.Clipboard, l logger.Logger) Process {
 	return &process{
 		u,
+		l,
 	}
 }
 
@@ -41,10 +44,10 @@ func (p *process) DeleteClipboardLastDayData() error {
 
 	// TODO: change time to 00:00:00
 	lastDay := now.AddDate(0, 0, -1).UTC()
-	fmt.Printf("Deleting data from %v\n", lastDay)
+	p.logger.Info(fmt.Sprintf("Deleting data before %v", lastDay))
 	err := p.clipboard.DeleteClipboardData(lastDay)
 	if err != nil {
-		fmt.Println("Error while deleting the data")
+		p.logger.Error(fmt.Sprintf("Error while deleting data before %v", err))
 		return err
 	}
 	return nil
