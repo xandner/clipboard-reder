@@ -4,6 +4,7 @@ import (
 	"clip/database"
 	"clip/repo"
 	"fmt"
+	"time"
 )
 
 type clipboard struct {
@@ -12,6 +13,7 @@ type clipboard struct {
 
 type Clipboard interface {
 	SaveInClipboard(data []byte) error
+	DeleteClipboardData(date time.Time) error
 }
 
 func NewClipboard(repo repo.Clipboard) Clipboard {
@@ -28,6 +30,15 @@ func (c *clipboard) SaveInClipboard(data []byte) error {
 			return nil
 		}
 		fmt.Println("Error while finding the data")
+		return err
+	}
+	return nil
+}
+
+func (c *clipboard) DeleteClipboardData(date time.Time) error {
+	err := c.repo.DeleteFromDate(date)
+	if err != nil {
+		fmt.Println("Error while deleting the data")
 		return err
 	}
 	return nil
