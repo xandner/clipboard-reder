@@ -12,7 +12,7 @@ type clipboard struct {
 }
 
 type Clipboard interface {
-	SaveInClipboard(data []byte) error
+	SaveInClipboard(data []byte,dataType database.Datatype) error
 	DeleteClipboardData(date time.Time) error
 }
 
@@ -22,14 +22,18 @@ func NewClipboard(repo repo.Clipboard) Clipboard {
 	}
 }
 
-func (c *clipboard) SaveInClipboard(data []byte) error {
-	err, _ := c.repo.FindByContent(data)
+func (c *clipboard) SaveInClipboard(data []byte, dataType database.Datatype) error {
+	err, lastStoredData := c.repo.LastStoredData()
 	if err != nil {
 		if err.Error() == "record not found" {
-			err = c.repo.Insert(data, database.Clipboard{})
-			return nil
+			err = c.repo.Insert(data, database.Clipboard{},dataType)
+			return err
 		}
 		fmt.Println("Error while finding the data")
+		return err
+	}
+	if string(lastStoredData.Data) != string(data) {
+		err = c.repo.Insert(data, database.Clipboard{}, dataType)
 		return err
 	}
 	return nil

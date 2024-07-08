@@ -6,16 +6,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type datatype string
+type Datatype string
 
 const (
-	Text datatype = "text"
-	Image datatype = "image"
+	Text Datatype = "text"
+	Image Datatype = "image"
 )
 
 type Clipboard struct {
 	gorm.Model
-	Datatype  datatype   `gorm:"not null"`
+	Datatype  Datatype   `gorm:"not null"`
 	Data      []byte     `gorm:"not null"`
 	CreatedAt time.Time
     UpdatedAt time.Time
