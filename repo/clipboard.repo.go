@@ -2,6 +2,7 @@ package repo
 
 import (
 	"clip/database"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -13,6 +14,7 @@ type clipboard struct {
 type Clipboard interface {
 	Insert(ctx []byte, e database.Clipboard) error
 	FindByContent(ctx []byte) (error, database.Clipboard)
+	DeleteFromDate(date time.Time) error
 }
 
 func NewClipboard(db *gorm.DB) Clipboard {
@@ -32,5 +34,10 @@ func (c *clipboard) FindByContent(ctx []byte) (error, database.Clipboard) {
 
 func (c *clipboard) Insert(ctx []byte, e database.Clipboard) error {
 	err := c.db.Create(&database.Clipboard{Data: ctx}).Error
+	return err
+}
+
+func (c *clipboard) DeleteFromDate(date time.Time) error {
+	err := c.db.Where("created_at < ?", date).Unscoped().Delete(&database.Clipboard{}).Error
 	return err
 }
