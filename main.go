@@ -3,6 +3,8 @@ package main
 import (
 	"clip/database"
 	"clip/pkg"
+	"clip/repo"
+	"clip/usecase"
 	"fmt"
 	"sync"
 
@@ -25,8 +27,14 @@ func run(db *gorm.DB){
 	// Migrate the schema
 	db.AutoMigrate(&database.Clipboard{})
 
+	// create repo object
+	newRepo:=repo.NewClipboard(db)
+
+	// create usecase object
+	newClipboard:=usecase.NewClipboard(newRepo)
+
 	// Run the process
-	newPkg:=pkg.NewProcess()
+	newPkg:=pkg.NewProcess(newClipboard)
 	wg.Add(1)
 	go newPkg.Init()
 	wg.Wait()
