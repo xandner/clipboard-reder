@@ -37,12 +37,15 @@ app.whenReady().then(() => {
         client.write("get_10\n");
       });
       client.on("data", (data) => {
-        responseData = data.toString();
-        console.log("Received:", data.toString());
+        const string = new TextDecoder().decode(new Uint8Array(data));
+        responseData = JSON.parse(string);
+        console.log(responseData)
+        for (const i of responseData){
+          console.log(i);
+        }
+        shadowWindow.webContents.send("response-data", responseData);
       });
     }
-
-    shadowWindow.webContents.send("response-data", responseData);
   });
 
   app.on("activate", () => {

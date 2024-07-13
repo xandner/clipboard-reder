@@ -67,6 +67,6 @@ func (s *server) handleConnection(conn net.Conn) {
 			}
 			conn.Write([]byte (jsonData))
 		}
-		conn.Write([]byte("ok\n"))
+		// conn.Write([]byte(`"message":"success`))
 	}
 }
