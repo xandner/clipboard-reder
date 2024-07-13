@@ -2,3 +2,4 @@
 .vscode/
 *.txt
 *.log
+node_modules/

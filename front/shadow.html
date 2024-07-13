@@ -1,27 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Shadow Window</title>
-    <style>
-        body {
-            margin: 0;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-    </style>
+  <title>Shadow Window</title>
+  <style>
+    body {
+      margin: 0;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    .content {
+      position: relative;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
+  <div class="content">
+    <button class="close-button">Close</button>
     <h1 id="message">Waiting for message...</h1>
-    <script>
-        const { ipcRenderer } = require('electron')
-        ipcRenderer.on('display-message', (event, message) => {
-            document.getElementById('message').innerText = message
-        })
-    </script>
+  </div>
+  <script>
+    const { ipcRenderer } = require("electron");
+
+    // Close button functionality
+    const closeButton = document.querySelector(".close-button");
+    closeButton.addEventListener("click", () => {
+      document.body.style.display = "none"; // Hide the entire body
+    });
+
+    ipcRenderer.on("response-data", (event, message) => {
+      console.log("Received message:", message);
+      const div = document.querySelector(".content");
+      div.innerHTML = '<button class="close-button">Close</button>';  // Clear existing content but keep the close button
+      for (const m of message) {
+        const h1 = document.createElement("h1");
+        h1.innerText = m.Data.slice(0,10);
+        div.appendChild(h1);
+      }
+
+      // Re-add close button functionality after innerHTML change
+      const newCloseButton = document.querySelector(".close-button");
+      newCloseButton.addEventListener("click", () => {
+        document.body.style.display = "none"; // Hide the entire body
+      });
+    });
+  </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ type clipboard struct {
 type Clipboard interface {
 	SaveInClipboard(data []byte, dataType database.Datatype) error
 	DeleteClipboardData(date time.Time) error
+	GetLast10() (error, []database.Clipboard)
 }
 
 func NewClipboard(repo repo.Clipboard, l logger.Logger) Clipboard {
@@ -49,4 +50,13 @@ func (c *clipboard) DeleteClipboardData(date time.Time) error {
 		return err
 	}
 	return nil
+}
+
+func (c *clipboard) GetLast10() (error, []database.Clipboard) {
+	err, data := c.repo.GetLast10()
+	if err != nil {
+		c.l.Error(fmt.Sprintf("Error while getting last 10 data %v", err))
+		return err, data
+	}
+	return nil, data
 }

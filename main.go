@@ -35,7 +35,6 @@ func main() {
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(12).Hour().Do(jobs.Init, db)
 	s.StartAsync()
-	go server.Main()
 	run(db, logger)
 }
 
@@ -54,6 +53,11 @@ func run(db *gorm.DB, logger logger.Logger) {
 	// Run the process
 	newPkg := pkg.NewProcess(newClipboard, logger)
 	newPkg.DeleteClipboardLastDayData()
+
+	// Run the server
+	server:=server.NewServer(logger,newClipboard)
+	go server.Main()
+
 	wg.Add(1)
 	go newPkg.Init()
 
