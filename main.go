@@ -6,6 +6,7 @@ import (
 	"clip/logger"
 	"clip/pkg"
 	"clip/repo"
+	"clip/server"
 	"clip/usecase"
 	"sync"
 	"time"
@@ -34,7 +35,7 @@ func main() {
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(12).Hour().Do(jobs.Init, db)
 	s.StartAsync()
-
+	go server.Main()
 	run(db, logger)
 }
 
