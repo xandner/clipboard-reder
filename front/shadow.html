@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Shadow Window</title>
     <style>
-        body {
-            margin: 0;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-        }
+      body {
+        margin: 0;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1 id="message">Waiting for message...</h1>
     <script>
-        const { ipcRenderer } = require('electron')
-        ipcRenderer.on('display-message', (event, message) => {
-            document.getElementById('message').innerText = message
-        })
+      const { ipcRenderer } = require("electron");
+      ipcRenderer.on("data", (event, message) => {
+        console.log("Received message:", message);
+        document.getElementById("message").innerText = message;
+      });
+      const client = net.connect({ port: 9999, host: "localhost" }, () => {
+        console.log("Connected to server!");
+        client.write("Hello from JavaScript client!\n");
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -1,6 +1,5 @@
 const { app, BrowserWindow, globalShortcut, ipcMain } = require("electron");
-const  {client} = require("./modules/client");
-const net=require("net");
+const net = require("net");
 
 let shadowWindow;
 
@@ -26,13 +25,24 @@ function createShadowWindow() {
 
 app.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Shift+v", () => {
-
+    let responseData = "";
     if (!shadowWindow) {
       createShadowWindow();
     } else {
       shadowWindow.show();
     }
-    shadowWindow.webContents.send("display-message", "Hello, Shadow Window!");
+    if (shadowWindow.isVisible()) {
+      const client = net.connect({ port: 9999, host: "localhost" }, () => {
+        console.log("Connected to server!");
+        client.write("get_10\n");
+      });
+      client.on("data", (data) => {
+        responseData = data.toString();
+        console.log("Received:", data.toString());
+      });
+    }
+
+    shadowWindow.webContents.send("response-data", responseData);
   });
 
   app.on("activate", () => {
