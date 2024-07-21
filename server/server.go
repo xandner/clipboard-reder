@@ -1,72 +1,91 @@
 package server
 
 import (
-	"bufio"
 	"clip/logger"
 	"clip/usecase"
 	"encoding/json"
 	"fmt"
-	"net"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
 type server struct {
-	l logger.Logger
-	u usecase.Clipboard
+	l     logger.Logger
+	u     usecase.Clipboard
+	conns map[*websocket.Conn]bool
 }
 type Server interface {
 	Main()
 }
 
-func NewServer(l logger.Logger,u usecase.Clipboard) Server {
+func NewServer(l logger.Logger, u usecase.Clipboard) Server {
 	return &server{
 		l,
 		u,
+		make(map[*websocket.Conn]bool),
 	}
 }
 
 func (s *server) Main() {
-	ln, err := net.Listen("tcp", ":9999")
+	http.HandleFunc("/clipboard", s.websocketHandler)
+	// http.HandleFunc("/search", s.websocketHandler)
+	fmt.Println("server started")
+	http.ListenAndServe(":9999", nil)
+
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+}
+
+func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return
 	}
-	fmt.Println("Server is listening on port 9999...")
+	defer conn.Close()
+	log.Println("connected")
+	err = conn.WriteMessage(websocket.TextMessage, []byte(s.getLastClipboardData()))
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	for {
-		conn, err := ln.Accept()
+		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			break
 		}
-		go s.handleConnection(conn) // handle each connection in a new goroutine
+		log.Printf("recv: %s", msg)
+		err = conn.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			log.Println(err)
+			break
+		}
 	}
 }
 
-func (s *server) handleConnection(conn net.Conn) {
-	defer func() {
-		fmt.Println("Closing connection")
-		conn.Close()
-	}()
-	reader := bufio.NewReader(conn)
-	for {
-		buf, err := reader.ReadBytes('\n')
-		if err != nil {
-			fmt.Println("Error reading from connection:", err)
-			return
-		}
-		fmt.Printf("Received: %s", buf)
-		if string(buf)=="get_10\n"{
-			e,data:=s.u.GetLast10()
-			if e!=nil{
-				conn.Write([]byte("error\n"))
-				s.l.Error(fmt.Sprintf("Error while getting last 10 data %v", e))
-				return
-			}
-			jsonData, err := json.Marshal(data)
-			if err != nil {
-				conn.Write([]byte("error\n"))
-				s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
-				return
-			}
-			conn.Write([]byte (jsonData))
-		}
-		// conn.Write([]byte(`"message":"success`))
+func (s *server) getLastClipboardData() string {
+	err, data := s.u.GetLast10()
+	if err != nil {
+		s.l.Error(fmt.Sprintf("Error while getting last 10 data %v", err))
 	}
+	// buf := new(bytes.Buffer)
+	// err = binary.Write(buf, binary.LittleEndian, data)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
+	// }
+	// return buf.Bytes()
+	stringData, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err)
+		s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
+	}
+	return string(stringData)
 }
