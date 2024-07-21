@@ -2,6 +2,7 @@ package server
 
 import (
 	"clip/logger"
+	"clip/types"
 	"clip/usecase"
 	"encoding/json"
 	"fmt"
@@ -61,11 +62,22 @@ func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			break
 		}
-		log.Printf("recv: %s", msg)
-		err = conn.WriteMessage(websocket.TextMessage, msg)
+		reqParam := types.ReqParams{}
+		err = json.Unmarshal(msg, &reqParam)
 		if err != nil {
 			log.Println(err)
-			break
+		}
+		switch reqParam.On {
+		case "search":
+			conn.WriteMessage(websocket.TextMessage, []byte(s.searchInClipboardData(reqParam.Param)))
+		case "get":
+			fmt.Println("get")
+		default:
+			err := conn.WriteMessage(websocket.TextMessage, []byte("Invalid request"))
+			if err != nil {
+				log.Println(err)
+				break
+			}
 		}
 	}
 }
@@ -82,6 +94,19 @@ func (s *server) getLastClipboardData() string {
 	// 	s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
 	// }
 	// return buf.Bytes()
+	stringData, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err)
+		s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
+	}
+	return string(stringData)
+}
+
+func (s *server) searchInClipboardData(param string) string {
+	err, data := s.u.SearchInClipboard(param)
+	if err != nil {
+		s.l.Error(fmt.Sprintf("Error while searching data %v", err))
+	}
 	stringData, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)

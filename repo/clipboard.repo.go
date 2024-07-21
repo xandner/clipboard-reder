@@ -19,6 +19,7 @@ type Clipboard interface {
 	DeleteFromDate(date time.Time) error
 	LastStoredData() (error, database.Clipboard)
 	GetLast10() (error, []database.Clipboard)
+	Search(ctx string) (error, []database.Clipboard)
 }
 
 func NewClipboard(db *gorm.DB, l logger.Logger) Clipboard {
@@ -59,6 +60,15 @@ func (c *clipboard) LastStoredData() (error, database.Clipboard) {
 func (c *clipboard) GetLast10() (error, []database.Clipboard) {
 	var clipboardData []database.Clipboard
 	err := c.db.Limit(10).Order("id desc").Find(&clipboardData).Error
+	if err != nil {
+		return err, clipboardData
+	}
+	return nil, clipboardData
+}
+
+func (c *clipboard) Search(ctx string) (error, []database.Clipboard) {
+	var clipboardData []database.Clipboard
+	err := c.db.Where("data LIKE ?", "%"+ctx+"%").Order("id desc").Limit(10).Find(&clipboardData).Error
 	if err != nil {
 		return err, clipboardData
 	}
