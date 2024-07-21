@@ -17,6 +17,7 @@ type Clipboard interface {
 	SaveInClipboard(data []byte, dataType database.Datatype) error
 	DeleteClipboardData(date time.Time) error
 	GetLast10() (error, []database.Clipboard)
+	SearchInClipboard(data string) (error, []database.Clipboard)
 }
 
 func NewClipboard(repo repo.Clipboard, l logger.Logger) Clipboard {
@@ -59,4 +60,13 @@ func (c *clipboard) GetLast10() (error, []database.Clipboard) {
 		return err, data
 	}
 	return nil, data
+}
+
+func (c *clipboard) SearchInClipboard(data string) (error, []database.Clipboard) {
+	err, searchResult := c.repo.Search(data)
+	if err != nil {
+		c.l.Error(fmt.Sprintf("Error while searching data %v", err))
+		return err, searchResult
+	}
+	return nil, searchResult
 }
