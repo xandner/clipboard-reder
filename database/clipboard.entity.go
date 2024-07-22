@@ -9,14 +9,14 @@ import (
 type Datatype string
 
 const (
-	Text Datatype = "text"
+	Text  Datatype = "text"
 	Image Datatype = "image"
 )
 
 type Clipboard struct {
 	gorm.Model
-	Datatype  Datatype   `gorm:"not null"`
-	Data      []byte     `gorm:"not null"`
+	Datatype  Datatype `gorm:"not null" json:"type"`
+	Data      []byte   `gorm:"not null" json:"data"`
 	CreatedAt time.Time
-    UpdatedAt time.Time
+	UpdatedAt time.Time
 }

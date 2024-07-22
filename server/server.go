@@ -4,6 +4,7 @@ import (
 	"clip/logger"
 	"clip/types"
 	"clip/usecase"
+	"clip/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -51,7 +52,7 @@ func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 	log.Println("connected")
-	err = conn.WriteMessage(websocket.TextMessage, []byte(s.getLastClipboardData()))
+	err = conn.WriteMessage(websocket.TextMessage, s.getLastClipboardData())
 	if err != nil {
 		log.Println(err)
 		return
@@ -69,7 +70,7 @@ func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		switch reqParam.On {
 		case "search":
-			conn.WriteMessage(websocket.TextMessage, []byte(s.searchInClipboardData(reqParam.Param)))
+			conn.WriteMessage(websocket.TextMessage, s.searchInClipboardData(reqParam.Param))
 		case "get":
 			fmt.Println("get")
 		default:
@@ -82,35 +83,31 @@ func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) getLastClipboardData() string {
+func (s *server) getLastClipboardData() []byte {
 	err, data := s.u.GetLast10()
 	if err != nil {
 		s.l.Error(fmt.Sprintf("Error while getting last 10 data %v", err))
 	}
-	// buf := new(bytes.Buffer)
-	// err = binary.Write(buf, binary.LittleEndian, data)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
-	// }
-	// return buf.Bytes()
-	stringData, err := json.Marshal(data)
+	sanitizedData := utils.SanitizeReturnData(data)
+	indentedData, err := json.MarshalIndent(sanitizedData, "", "    ")
 	if err != nil {
 		log.Println(err)
 		s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
+
 	}
-	return string(stringData)
+	return indentedData
 }
 
-func (s *server) searchInClipboardData(param string) string {
+func (s *server) searchInClipboardData(param string) []byte {
 	err, data := s.u.SearchInClipboard(param)
 	if err != nil {
 		s.l.Error(fmt.Sprintf("Error while searching data %v", err))
 	}
-	stringData, err := json.Marshal(data)
+	sanitizedData := utils.SanitizeReturnData(data)
+	indented, err := json.MarshalIndent(sanitizedData, "", "    ")
 	if err != nil {
 		log.Println(err)
 		s.l.Error(fmt.Sprintf("Error while marshalling data %v", err))
 	}
-	return string(stringData)
+	return indented
 }

@@ -4,8 +4,11 @@ import (
 	"clip/database"
 	"clip/logger"
 	"clip/repo"
+	"errors"
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type clipboard struct {
@@ -30,7 +33,7 @@ func NewClipboard(repo repo.Clipboard, l logger.Logger) Clipboard {
 func (c *clipboard) SaveInClipboard(data []byte, dataType database.Datatype) error {
 	err, lastStoredData := c.repo.LastStoredData()
 	if err != nil {
-		if err.Error() == "record not found" {
+		if errors.Is(err,gorm.ErrRecordNotFound) {
 			err = c.repo.Insert(data, database.Clipboard{}, dataType)
 			return err
 		}
