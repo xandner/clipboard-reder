@@ -41,6 +41,7 @@ func main() {
 func run(db *gorm.DB, logger logger.Logger) {
 
 	var wg sync.WaitGroup
+
 	// Migrate the schema
 	db.AutoMigrate(&database.Clipboard{})
 
@@ -55,11 +56,16 @@ func run(db *gorm.DB, logger logger.Logger) {
 	newPkg.DeleteClipboardLastDayData()
 
 	// Run the server
-	server:=server.NewServer(logger,newClipboard)
+	server := server.NewServer(logger, newClipboard)
 	go server.Main()
 
 	wg.Add(1)
 	go newPkg.Init()
 
 	wg.Wait()
+
+	defer func() {
+		wg.Done()
+		logger.Info("Exiting")
+	}()
 }
