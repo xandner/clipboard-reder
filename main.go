@@ -5,9 +5,11 @@ import (
 	"clip/jobs"
 	"clip/logger"
 	"clip/pkg"
+	"clip/pkg/config"
 	"clip/repo"
 	"clip/server"
 	"clip/usecase"
+	"fmt"
 	"sync"
 	"time"
 
@@ -18,6 +20,9 @@ import (
 )
 
 func main() {
+
+	// init configs
+	config := config.NewEnvConfig()
 
 	//init logger
 	logger, err := logger.NewLogger("log.log")
@@ -33,12 +38,13 @@ func main() {
 
 	// Run the jobs
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(12).Hour().Do(jobs.Init, db)
+	s.Every(12).Hour().Do(jobs.Init, db, config)
 	s.StartAsync()
-	run(db, logger)
+	run(db, logger, config)
 }
 
-func run(db *gorm.DB, logger logger.Logger) {
+func run(db *gorm.DB, logger logger.Logger, config *config.Config) {
+	fmt.Println(config.AppHost)
 
 	var wg sync.WaitGroup
 
@@ -50,7 +56,7 @@ func run(db *gorm.DB, logger logger.Logger) {
 	newRepo := repo.NewClipboard(db, logger)
 
 	// create usecase object
-	newClipboard := usecase.NewClipboard(newRepo, logger)
+	newClipboard := usecase.NewClipboard(newRepo, logger, config)
 
 	// Run the process
 	newPkg := pkg.NewProcess(newClipboard, logger)

@@ -3,6 +3,7 @@ package usecase
 import (
 	"clip/database"
 	"clip/logger"
+	"clip/pkg/config"
 	"clip/repo"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 type clipboard struct {
 	repo repo.Clipboard
 	l    logger.Logger
+	C    *config.Config
 }
 
 type Clipboard interface {
@@ -23,18 +25,20 @@ type Clipboard interface {
 	SearchInClipboard(data string) (error, []database.Clipboard)
 }
 
-func NewClipboard(repo repo.Clipboard, l logger.Logger) Clipboard {
+func NewClipboard(repo repo.Clipboard, l logger.Logger, c *config.Config) Clipboard {
 	return &clipboard{
 		repo,
 		l,
+		c,
 	}
 }
 
 func (c *clipboard) SaveInClipboard(data []byte, dataType database.Datatype) error {
 	err, lastStoredData := c.repo.LastStoredData()
 	if err != nil {
-		if errors.Is(err,gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = c.repo.Insert(data, database.Clipboard{}, dataType)
+			c.l.Error(fmt.Sprintf("Error while getting last stored data %v", err))
 			return err
 		}
 		c.l.Error(fmt.Sprintf("Error while getting last stored data %v", err))
