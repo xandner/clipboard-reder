@@ -20,6 +20,7 @@ type Clipboard interface {
 	LastStoredData() (error, database.Clipboard)
 	GetLast10() (error, []database.Clipboard)
 	Search(ctx string) (error, []database.Clipboard)
+	FindById(recordId int) (error, database.Clipboard)
 }
 
 func NewClipboard(db *gorm.DB, l logger.Logger) Clipboard {
@@ -73,4 +74,14 @@ func (c *clipboard) Search(ctx string) (error, []database.Clipboard) {
 		return err, clipboardData
 	}
 	return nil, clipboardData
+}
+
+func (c *clipboard) FindById(recordId int) (error, database.Clipboard) {
+	var clipboardRecord database.Clipboard
+	err := c.db.Where("id = ?", recordId).Find(&clipboardRecord).Error
+	if err != nil {
+		return err, clipboardRecord
+	}
+	return nil, clipboardRecord
+
 }

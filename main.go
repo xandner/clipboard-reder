@@ -20,6 +20,7 @@ import (
 )
 
 func main() {
+	fmt.Println("hey")
 
 	// init configs
 	config := config.NewEnvConfig()
