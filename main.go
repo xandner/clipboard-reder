@@ -44,6 +44,7 @@ func run(db *gorm.DB, logger logger.Logger) {
 
 	// Migrate the schema
 	db.AutoMigrate(&database.Clipboard{})
+	db.AutoMigrate(&database.User{})
 
 	// create repo object
 	newRepo := repo.NewClipboard(db, logger)
