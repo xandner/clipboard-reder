@@ -5,10 +5,13 @@ import (
 	"clip/logger"
 	"clip/pkg/config"
 	"clip/repo"
+	"clip/types"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
+	clipboardLib "golang.design/x/clipboard"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +26,7 @@ type Clipboard interface {
 	DeleteClipboardData(date time.Time) error
 	GetLast10() (error, []database.Clipboard)
 	SearchInClipboard(data string) (error, []database.Clipboard)
+	SetData(param types.ReqParams) error
 }
 
 func NewClipboard(repo repo.Clipboard, l logger.Logger, c *config.Config) Clipboard {
@@ -76,4 +80,28 @@ func (c *clipboard) SearchInClipboard(data string) (error, []database.Clipboard)
 		return err, searchResult
 	}
 	return nil, searchResult
+}
+
+func (c *clipboard) SetData(param types.ReqParams) error {
+	recordId, err := strconv.Atoi(param.Param)
+	if err != nil {
+		c.l.Error(fmt.Sprintf("while setting data got error: %v", err))
+		return err
+	}
+	err, record := c.repo.FindById(recordId)
+	if err != nil {
+		c.l.Error(err.Error())
+		return err
+	}
+	if string(record.Data) == "" {
+		c.l.Error("record not found")
+		return errors.New("no data found")
+	}
+	err = clipboardLib.Init()
+	if err != nil {
+		c.l.Error(fmt.Sprintf("Error while initializing clipboard %v", err))
+		return err
+	}
+	clipboardLib.Write(clipboardLib.FmtText, []byte(record.Data))
+	return nil
 }
