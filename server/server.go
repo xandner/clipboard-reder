@@ -72,7 +72,10 @@ func (s *server) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		case "search":
 			conn.WriteMessage(websocket.TextMessage, s.searchInClipboardData(reqParam.Param))
 		case "set":
-			s.u.SetData(reqParam)
+			err := s.u.SetData(reqParam)
+			if err != nil {
+				conn.WriteJSON(fmt.Sprintf(`"Message":"Error while setting data: %v"`, err))
+			}
 			conn.WriteJSON(`{"message":"ok"}`)
 		default:
 			err := conn.WriteMessage(websocket.TextMessage, []byte("Invalid request"))

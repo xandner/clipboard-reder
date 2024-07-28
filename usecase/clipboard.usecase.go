@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"gorm.io/gorm"
 	clipboardLib "golang.design/x/clipboard"
+	"gorm.io/gorm"
 )
 
 type clipboard struct {
@@ -83,9 +83,9 @@ func (c *clipboard) SearchInClipboard(data string) (error, []database.Clipboard)
 }
 
 func (c *clipboard) SetData(param types.ReqParams) error {
-	recordId,err:=strconv.Atoi(param.Param)
-	if err != nil{
-		c.l.Error(fmt.Sprintf("while setting data got error: %v",err))
+	recordId, err := strconv.Atoi(param.Param)
+	if err != nil {
+		c.l.Error(fmt.Sprintf("while setting data got error: %v", err))
 		return err
 	}
 	err, record := c.repo.FindById(recordId)
@@ -93,11 +93,15 @@ func (c *clipboard) SetData(param types.ReqParams) error {
 		c.l.Error(err.Error())
 		return err
 	}
-	fmt.Println(record)
+	if string(record.Data) == "" {
+		c.l.Error("record not found")
+		return errors.New("no data found")
+	}
 	err = clipboardLib.Init()
 	if err != nil {
-		panic(err)
+		c.l.Error(fmt.Sprintf("Error while initializing clipboard %v", err))
+		return err
 	}
-	clipboardLib.Write(clipboardLib.FmtText,[]byte(record.Data))
+	clipboardLib.Write(clipboardLib.FmtText, []byte(record.Data))
 	return nil
 }

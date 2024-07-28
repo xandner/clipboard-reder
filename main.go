@@ -9,7 +9,6 @@ import (
 	"clip/repo"
 	"clip/server"
 	"clip/usecase"
-	"fmt"
 	"sync"
 	"time"
 
@@ -20,8 +19,6 @@ import (
 )
 
 func main() {
-	fmt.Println("hey")
-
 	// init configs
 	config := config.NewEnvConfig()
 
@@ -45,8 +42,6 @@ func main() {
 }
 
 func run(db *gorm.DB, logger logger.Logger, config *config.Config) {
-	fmt.Println(config.AppHost)
-
 	var wg sync.WaitGroup
 
 	// Migrate the schema
