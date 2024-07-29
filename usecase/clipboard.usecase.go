@@ -102,6 +102,9 @@ func (c *clipboard) SetData(param types.ReqParams) error {
 		c.l.Error(fmt.Sprintf("Error while initializing clipboard %v", err))
 		return err
 	}
+	if record.Datatype == database.Image {
+		clipboardLib.Write(clipboardLib.FmtImage, record.Data)
+	}
 	clipboardLib.Write(clipboardLib.FmtText, []byte(record.Data))
 	return nil
 }
